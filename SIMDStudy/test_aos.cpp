@@ -126,5 +126,5 @@ void test_aos()
 		}
 	}
 	float elapsed = watch.stop();
-	std::cout << "test1: " << elapsed << " seconds" << std::endl;
+	std::cout << "lame: " << elapsed << " seconds" << std::endl;
 }
