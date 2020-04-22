@@ -133,6 +133,8 @@ void test_soa()
 		uint32 allegiance;
 	} playersOnStack[MAX_PLAYERS];
 	
+	Stopwatch watch; // Construction cost for playersOnStack should be included
+
 	for (uint32 i = 0; i < NUM_PLAYERS; ++i)
 	{
 		PositionComponent* position = players[i]->findComponent<PositionComponent>();
@@ -142,7 +144,6 @@ void test_soa()
 		playersOnStack[i].allegiance = players[i]->getAllegiance();
 	}
 
-	Stopwatch watch;
 	// SIMD
 	{
 		const DoorArray& doors = doorArray->getData();
