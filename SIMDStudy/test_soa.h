@@ -1,3 +1,3 @@
 #pragma once
 
-void test_soa();
+void test_soa(float& outResultSOA, float& outResultSSE, float& outResultAVX);

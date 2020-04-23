@@ -95,12 +95,17 @@ public:
 	{
 		doorArray.shouldBeOpen.resize(size);
 	}
+	// For scalar version
+	__forceinline void setOutput(uint32 index, uint32 value)
+	{
+		doorArray.shouldBeOpen[index] = value;
+	}
 	const DoorArray& getData() const { return doorArray; }
 private:
 	DoorArray doorArray;
 };
 
-void test_soa()
+void test_soa(float& outResultSOA, float& outResultSSE, float& outResultAVX)
 {
 	std::vector<PlayerActor*> players;
 	DoorArrayActor* doorArray;
@@ -133,6 +138,58 @@ void test_soa()
 		float z;
 		uint32 allegiance;
 	} playersOnStack[MAX_PLAYERS];
+
+	// Scalar (SOA)
+	{
+		Stopwatch watch; // Construction cost for playersOnStack should be included
+
+		for (uint32 i = 0; i < NUM_PLAYERS; ++i)
+		{
+			PositionComponent* position = players[i]->findComponent<PositionComponent>();
+			playersOnStack[i].x = position->x;
+			playersOnStack[i].y = position->y;
+			playersOnStack[i].z = position->z;
+			playersOnStack[i].allegiance = players[i]->getAllegiance();
+		}
+
+		const DoorArray& doors = doorArray->getData();
+		doorArray->resizeOutput(doors.count);
+		for (uint32 d = 0; d < doors.count; ++d)
+		{
+			float door_x = doors.x[d];
+			float door_y = doors.y[d];
+			float door_z = doors.z[d];
+			float door_r2 = doors.radiusSquared[d];
+			uint32 door_a = doors.allegiance[d];
+
+			doorArray->setOutput(d, 0);
+
+			for (uint32 c = 0; c < NUM_PLAYERS; ++c)
+			{
+				float player_x = playersOnStack[c].x;
+				float player_y = playersOnStack[c].y;
+				float player_z = playersOnStack[c].z;
+				uint32 player_a = playersOnStack[c].allegiance;
+
+				float ddx = door_x - player_x;
+				float ddy = door_y - player_y;
+				float ddz = door_z - player_z;
+				float dtx = ddx * ddx;
+				float dty = ddy * ddy;
+				float dtz = ddz * ddz;
+				float dst_2 = dtx + dty + dtz;
+
+				if (dst_2 <= door_r2)
+				{
+					doorArray->setOutput(d, 1);
+					break;
+				}
+			}
+		}
+
+		outResultSOA = watch.stop();
+		std::cout << "test2: " << outResultSOA << " seconds (Scalar, SOA)" << std::endl;
+	}
 
 	// SIMD (SSE2)
 	{
@@ -184,8 +241,8 @@ void test_soa()
 			}
 		}
 
-		float elapsed = watch.stop();
-		std::cout << "SSE2: " << elapsed << " seconds" << std::endl;
+		outResultSSE = watch.stop();
+		std::cout << "test3: " << outResultSSE << " seconds (SSE2)" << std::endl;
 	}
 
 	// SIMD (AVX2)
@@ -238,7 +295,7 @@ void test_soa()
 			}
 		}
 
-		float elapsed = watch.stop();
-		std::cout << "AVX2: " << elapsed << " seconds" << std::endl;
+		outResultAVX = watch.stop();
+		std::cout << "test4: " << outResultAVX << " seconds (AVX2)" << std::endl;
 	}
 }

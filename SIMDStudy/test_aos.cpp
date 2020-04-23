@@ -96,7 +96,7 @@ private:
 	float openDistanceSquared;
 };
 
-void test_aos()
+void test_aos(float& outResultAOS)
 {
 	std::vector<PlayerActor*> players;
 	std::vector<DoorActor*> doors;
@@ -118,6 +118,7 @@ void test_aos()
 		doors.push_back(D);
 	}
 
+	// Scalar (AOS)
 	Stopwatch watch;
 	{
 		for (uint32 i = 0; i < NUM_DOORS; ++i)
@@ -125,6 +126,6 @@ void test_aos()
 			doors[i]->update(players);
 		}
 	}
-	float elapsed = watch.stop();
-	std::cout << "lame: " << elapsed << " seconds" << std::endl;
+	outResultAOS = watch.stop();
+	std::cout << "test1: " << outResultAOS << " seconds (Scalar, AOS)" << std::endl;
 }

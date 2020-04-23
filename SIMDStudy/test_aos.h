@@ -1,3 +1,3 @@
 #pragma once
 
-void test_aos();
+void test_aos(float& outResultAOS);
